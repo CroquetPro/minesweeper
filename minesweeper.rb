@@ -1,5 +1,6 @@
 require 'byebug'
 require 'colorize'
+rewuire 'yaml'
 
 class Tile
 
@@ -75,9 +76,9 @@ end
 class Board
   attr_reader :grid
 
-  def initialize
+  def initialize(mines)
     @grid = Array.new(9) {Array.new(9)}
-    self.populate!
+    self.populate!(mines)
   end
 
   def render
@@ -115,7 +116,7 @@ class Board
     end
   end
 
-  def bury_mines!(n = 10)
+  def bury_mines!(n)
     mines = 0
     until mines == n
       tile = @grid.sample.sample
@@ -135,10 +136,11 @@ class Board
 end
 
 class Game
-  attr_reader :board
+  attr_reader :board, :start_time
 
-  def initialize
-    @board = Board.new
+  def initialize(mines)
+    @start_time = Time.now
+    @board = Board.new(mines)
 
   end
 
@@ -149,13 +151,17 @@ class Game
       if over?
         board.grid.flatten.select(&:mined).each(&:reveal!)
         display
+        @end_time = Time.now
         puts "You Lose!! (a leg)".colorize(:red)
+        puts "It took you #{(@end_time - start_time).to_i} seconds"
         return
       end
     end
     board.grid.flatten.each(&:reveal!)
     display
+    @end_time = Time.now
     puts "You survived!"
+    puts "It took you #{(@end_time - start_time).to_i} seconds"
   end
 
   def display
@@ -190,7 +196,7 @@ class Game
   end
 
   def save_game
-
+    save_file = @board.to_yaml
   end
 
   def load_game
@@ -217,7 +223,7 @@ end
 
 if $PROGRAM_NAME == __FILE__
 
-  game = Game.new
+  game = Game.new(10)
   game.play
 #   game.board.grid.each do |row|
 #     row.each do |tile|
